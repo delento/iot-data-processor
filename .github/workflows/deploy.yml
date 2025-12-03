@@ -1,9 +1,10 @@
-name: Build and Deploy Azure Function
+name: Deploy IoT Data Processor Function App
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -13,26 +14,27 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Setup .NET SDK
+    - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: '8.0.x' # Match your .NET 8 version
 
-    - name: Install NuGet CLI
-      uses: NuGet/setup-nuget@v1.1.1
-
+    # Restore dependencies
     - name: Restore dependencies
-      run: dotnet restore ./iot-data-processor/iot-data-processor.csproj
+      run: dotnet restore ./IoTDataProcessor.csproj
 
+    # Build the function app
     - name: Build
-      run: dotnet build ./iot-data-processor/iot-data-processor.csproj --configuration Release --no-restore
+      run: dotnet build ./IoTDataProcessor.csproj --configuration Release --no-restore
 
-    - name: Publish Azure Function
-      run: dotnet publish ./iot-data-processor/iot-data-processor.csproj --configuration Release --output ./publish --no-restore
+    # Publish the function app to a folder
+    - name: Publish
+      run: dotnet publish ./IoTDataProcessor.csproj --configuration Release --output ./publish --no-restore
 
+    # Deploy to Azure Function App
     - name: Deploy to Azure Function App
       uses: azure/functions-action@v1
       with:
-        app-name: 'your-function-app-name' # Replace with your Function App name
+        app-name: 'integrationtomysql' # Your function app name
         package: './publish'
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
